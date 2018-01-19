@@ -1,0 +1,9 @@
+Fitter Status : Successful - Mon Jul 11 15:17:33 2016
+Quartus II Version : 9.1 Build 222 10/21/2009 SJ Full Version
+Revision Name : CPU
+Top-level Entity Name : CPU
+Family : MAX7000S
+Device : EPM7128SLC84-15
+Timing Models : Final
+Total macrocells : 43 / 128 ( 34 % )
+Total pins : 49 / 68 ( 72 % )

@@ -1,0 +1,295 @@
+LIBRARY IEEE ;
+USE IEEE.STD_LOGIC_1164.ALL ;
+USE IEEE.STD_LOGIC_UNSIGNED.ALL ;
+
+ENTITY CPU IS
+PORT (CLR,              -- Clear
+      T3,               -- Clock Pulse T3
+      SWA,SWB,SWC,      -- Console Signal
+      IR7,IR6,IR5,IR4,  -- Opcode
+      W3,W2,W1,         -- Clock Level
+      C,Z: IN STD_LOGIC ; -- Carry Bit or 0 Result Output
+     
+      LDZ,LDC,          -- Loading Instruction of C,Z
+      CIN,              -- Output of Carry Bit
+      S3,S2,S1,S0,      -- Operation Pattern of ALU
+      M,                -- Arithmetic or Logic operation of ALU
+      ABUS,SBUS,MBUS,   -- Switch of ABUS,SBUS,MBUS
+      DRW,              -- Wrting Instruction of General Register
+      PCINC,PCADD,ARINC,-- Adding-1 Instrction of PC and AR, Adding Instruction of PC 
+      LPC,LAR,LIR,      -- Loading Instruction of PC,AR,IR 
+      SELCTL,           -- Experiment Instrument Signal
+      MEMW,             -- Writing Instruction of RAM
+      STOP,             -- Instruction of Stoping Machine
+      SHORT,LONG,       -- Flag of 1 CPU Level or 3 CPU Level
+      SEL3,SEL2,SEL1,SEL0,-- Selection of General Register
+      O1,O2,O3,O4: OUT STD_LOGIC) ;-- For Debugging
+END CPU ;   
+
+ARCHITECTURE BEHAVE OF CPU IS 
+	SIGNAL IR: STD_LOGIC_VECTOR (7 DOWNTO 4) ; -- Opcode Vector
+	SIGNAL SW: STD_LOGIC_VECTOR (2 DOWNTO 0) ; -- Console Signal Vector
+	SIGNAL ST0: STD_LOGIC ;    -- Flag of Instruction Period       
+	SIGNAL SST0: STD_LOGIC ;   -- Flag of Instruction Period
+    SIGNAL FLAG: STD_LOGIC ;   -- Flag of Instruction Period
+    SIGNAL FFLAG: STD_LOGIC ;  -- Flag of Instruction Period
+	
+BEGIN 
+    SW <= SWC & SWB & SWA ;
+    IR <= IR7 & IR6 & IR5 & IR4 ;
+    PROCESS (CLR,SW,IR,ST0,SST0,T3,W1,W2,W3,C,Z,FFLAG,FLAG) 	
+    BEGIN                      -- Initialization
+        LDZ <= '0' ;
+        LDC <= '0' ;
+        CIN <= '0' ;
+        S3 <= '0' ;
+        S2 <= '0' ;
+        S1 <= '0' ;
+        S0 <= '0' ;
+        M <= '0' ;
+        ABUS <= '0' ;
+        SBUS <= '0' ;
+        MBUS <= '0' ;
+        DRW <= '0' ;
+        PCINC <= '0' ;
+        PCADD <= '0' ;
+        ARINC <= '0' ;
+        LPC <= '0' ;
+        LAR <= '0' ;
+        LIR <= '0' ;
+        SELCTL <= '0' ;
+        MEMW <= '0' ;
+        STOP <= '0' ;
+        SHORT <= '0' ;
+        LONG <= '0' ;
+        SEL3 <= '0' ;
+        SEL2 <= '0' ;
+        SEL1 <= '0' ;
+        SEL0 <= '0' ;
+    IF (CLR = '0') THEN   -- Response to CLR Signal
+		ST0 <= '0' ;
+		SST0 <= '0' ;
+        FFLAG <='0' ;
+        FLAG <='0' ;
+    ELSIF (SST0 = '1' AND falling_edge(T3)) THEN  -- Change to New CPU Levels
+		ST0 <= '1' ;
+    ELSIF (FFLAG = '1' AND falling_edge(T3)) THEN -- Change to New CPU Levels
+		FLAG <= '1' ;
+
+	END IF ;
+		
+	CASE SW IS
+		WHEN "100" =>
+			IF (ST0 = '0' AND W1 = '1' AND W2 = '0') THEN 
+				SBUS <= '1' ;
+				SEL3 <= '0' ;
+				SEL2 <= '0' ;
+				SEL1 <= '1' ;
+				SEL0 <= '1' ;
+				SELCTL <= '1' ;
+				DRW <= '1' ;
+				STOP <= '1' ;
+			ELSIF (ST0 = '0' AND W1 = '0' AND W2 = '1') THEN 
+				SBUS <= '1' ;
+				SEL3 <= '0' ;
+				SEL2 <= '1' ;
+				SEL1 <= '0' ;
+				SEL0 <= '0' ;
+				SELCTL <= '1' ;
+				STOP <= '1' ;
+				DRW <= '1' ;
+				SST0 <= '1' ;
+			ELSIF (ST0 = '1' AND W1 = '1' AND W2 = '0') THEN 
+				SBUS <= '1' ;
+				SEL3 <= '1' ;
+				SEL2 <= '0' ;
+				SEL1 <= '0' ;
+				SEL0 <= '1' ;
+				SELCTL <= '1' ;
+				DRW <= '1' ;
+				STOP <= '1' ;
+			ELSIF (ST0 = '1' AND W1 = '0' AND W2 = '1') THEN 
+				SBUS <= '1' ;
+				SEL3 <= '1' ;
+				SEL2 <= '1' ;
+				SEL1 <= '1' ;
+				SEL0 <= '0' ;
+				SELCTL <= '1' ;
+				DRW <= '1' ;
+				STOP <= '1' ;
+			END IF ;
+		
+		WHEN "011" =>
+			IF (W1 = '1' AND W2 = '0') THEN
+				SEL3 <= '0' ;
+				SEL2 <= '0' ;
+				SEL1 <= '0' ;
+				SEL0 <= '1' ;
+				SELCTL <= '1' ;
+				STOP <= '1' ;
+			ELSIF (W1 = '0' AND W2 = '1') THEN
+				SEL3 <= '1' ;
+				SEL2 <= '0' ;
+				SEL1 <= '1' ;
+				SEL0 <= '1' ;
+				SELCTL <= '1' ;
+				STOP <= '1' ;
+			END IF ;
+		
+		WHEN "010" =>
+			IF (ST0 = '0' AND W1 = '1' ) THEN 
+				SBUS <= '1' ;
+				LAR <= '1' ;
+				STOP <= '1' ;
+				SST0 <= '1' ;
+				SHORT <= '1' ;
+				SELCTL <= '1' ;
+			ELSIF (ST0 = '1' AND W1 = '1' ) THEN
+				MBUS <= '1' ;
+				ARINC <= '1' ;
+				STOP <= '1' ;
+				SHORT <= '1' ;
+				SELCTL <= '1' ;
+			END IF ;
+		
+		WHEN "001" =>
+			IF (ST0 = '0' AND W1 = '1') THEN
+				SBUS <= '1' ;
+				LAR <= '1' ;
+				STOP <= '1' ;
+				SST0 <= '1' ;
+				SHORT <= '1' ;
+				SELCTL <= '1' ;
+			ELSIF (ST0 = '1' AND W1 = '1') THEN
+				SBUS <= '1' ;
+				MEMW <= '1' ;
+				ARINC <= '1' ;
+				STOP <= '1' ;
+				SHORT <= '1' ;
+				SELCTL <= '1' ;
+			END IF ;
+		
+		WHEN "000" =>
+		
+			IF(FLAG <= '0' )  THEN
+				SBUS <= W1;
+				LPC  <= W1;
+				STOP <= W1;
+				SHORT <= W1;
+				FFLAG <= W1;
+			ELSE
+				LIR <= W1 ;
+				PCINC <= W1 ;	
+			END IF ;
+			
+			CASE IR IS
+				WHEN "0001" => --ADD
+					S3 <= W2 ;
+					S0 <= W2 ;
+					CIN <= W2 ;
+					ABUS <= W2 ;
+					DRW <= W2 ;
+					LDZ <= W2 ;
+					LDC <= W2 ;
+				WHEN "0010" => --SUB
+					S2 <= W2 ;
+					S1 <= W2 ;
+					ABUS <= W2 ;
+					DRW <= W2 ;
+					LDZ <= W2 ;
+					LDC <= W2 ;
+				WHEN "0011" => --AND
+					M <= W2 ;
+					S3 <= W2 ;
+					S1 <= W2 ;
+					S0 <= W2 ;
+					ABUS <= W2 ;
+					DRW <= W2 ;
+					LDZ <= W2 ;
+				WHEN "0100" => --INC
+					ABUS <= W2 ;
+					DRW <= W2 ;
+					LDZ <= W2 ;
+					LDC <= W2 ;
+				WHEN "0101" => --LD
+					M <= W2 ;
+					S3 <= W2 ;
+					S1 <= W2 ;
+					ABUS <= W2 ;
+					LAR <= W2 ;
+					LONG <= W2 ;
+					
+					DRW <= W3 ;
+					MBUS <= W3 ;
+				WHEN "0110" => --ST
+					M <= W2 OR W3 ;
+					S3 <= W2 OR W3 ;
+					S2 <= W2 ;
+					S1 <= W2 OR W3 ;
+					S0 <= W2 ;
+					ABUS <= W2 OR W3 ;
+					LAR <= W2 ;
+					LONG <= W2 ;
+					MEMW <= W3 ;
+				WHEN "0111" => --JC
+					IF (C = '1') THEN 
+						PCADD <= W2 ;
+					END IF ;
+				WHEN "1000" => --JZ
+					IF (Z = '1') THEN
+						PCADD <= W2 ;
+					END IF ;
+				WHEN "1001" => --JMP
+					M <= W2 ;
+					S3 <= W2 ;
+					S2 <= W2 ;
+					S1 <= W2 ;
+					S0 <= W2 ;
+					ABUS <= W2 ;
+					LPC <= W2 ;
+				WHEN "1010" => --OUT Rd
+					M <= W2 ;
+					S3 <= W2 ;
+					S2 <= W2 ;
+					S1 <= W2 ;
+					S0 <= W2 ;
+					ABUS <= W2 ;
+				WHEN "1011" => --XOR
+					M <= W2 ;
+					S2 <= W2 ;
+					S1 <= W2 ;
+					ABUS <= W2 ;
+					DRW <= W2 ;
+					LDZ <= W2 ;
+				WHEN "1100" => --XNOR
+					M <= W2 ;
+					S3 <= W2 ;
+					S0 <= W2 ;
+					ABUS <= W2 ;
+					DRW <= W2 ;
+					LDZ <= W2 ;
+				WHEN "1101" => --OR 
+					M <= W2 ;
+					S3 <= W2 ;
+					S2 <= W2 ;
+					S1 <= W2 ;
+					ABUS <= W2 ;
+					DRW <= W2 ;
+					LDZ <= W2 ;
+				WHEN "1110" => --STP
+					STOP <= W2 ;
+				WHEN OTHERS => --MOV
+					M <= W2;
+					S3 <= W2;
+					S1 <= W2;
+					ABUS <= W2;
+					DRW <= W2;
+			END CASE ;
+		WHEN OTHERS => NULL ;
+	END CASE ;
+	O1 <= IR(4) ;
+	O2 <= IR(5) ;
+	O3 <= IR(6) ;
+	O4 <= IR(7) ;
+	END PROCESS ;
+END BEHAVE ;	
