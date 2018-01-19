@@ -1,0 +1,12 @@
+dao	123456	000000	Moderator	Basketball
+zyq	123456	000001	Admin
+lichen	123456	000004	Moderator	Football
+xfr	123456	000006	OrdinaryUser
+zty	zyq12456	000007	OrdinaryUser
+oo	xx	000008	OrdinaryUser
+lyq	123456	000010	OrdinaryUser
+qwer	qwer	000011	Moderator	XiaoFenRui
+pcc	123456	000012	OrdinaryUser
+changyuan	123456	000013	OrdinaryUser
+adadad	123456	000014	OrdinaryUser
+acacac	123456	000015	OrdinaryUser
